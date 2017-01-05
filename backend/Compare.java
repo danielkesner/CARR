@@ -64,7 +64,6 @@ public class Compare {
 				/* Check each corporate record for a possible match */
 				for (int corpIter = 0; corpIter < corp.size(); corpIter++) {
 
-					// was = newGetNumberOfSimilarTokens
 					similarTokens = getNumberOfMatchingTokens(cclRecord.trimmedRecord, corp.get(corpIter).trimmedRecord);
 					if (similarTokens > 1) {
 						// We have two or more similar tokens; high probability of match
@@ -123,12 +122,13 @@ public class Compare {
 
 	}
 
-	private static ArrayList<Record> populateRecordList(String path, int buffsize, boolean sortAlphabetically) {
+	private static ArrayList<Record> populateRecordList(String path, int buffsize, 
+			boolean sortAlphabetically) {
 
 		ArrayList<Record> ret = new ArrayList<Record>(buffsize);
 		ArrayList<String> trimmedTokens = new ArrayList<String>(5);
 
-		String[] tmp;
+		String[] splitTokens;
 
 		BufferedReader br;
 
@@ -140,6 +140,7 @@ public class Compare {
 
 			br = new BufferedReader(new FileReader(path));
 
+			// For each line of the file
 			while ((strbf = br.readLine()) != null) {
 
 				originalName = getName(strbf);
@@ -147,9 +148,9 @@ public class Compare {
 				trimmedName = originalName.replaceAll("/", " ");
 				trimmedName = trimmedName.replaceAll(",", " ");
 				// Split into tokens
-				tmp = trimmedName.split("\\s+");
+				splitTokens = trimmedName.split("\\s+");
 
-				trimmedTokens = removeCommonWords(tmp);
+				trimmedTokens = removeCommonWords(splitTokens);
 				trimmedTokens = removeInternalNonAlpha(trimmedTokens);
 				trimmedTokens = removeDuplicates(trimmedTokens);
 				trimmedTokens = removeSmallEntries(trimmedTokens);
