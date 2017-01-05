@@ -32,6 +32,7 @@ public class Compare {
 
 	// Generates Matches.txt, a listing of all possible matching Corp/LP records
 	// for a given CCL record (see Matches.txt for output)
+	// Runtime: Long (~18 hours)
 	public static void getMatches() {
 
 		FileWriter writer;
@@ -48,7 +49,7 @@ public class Compare {
 		ArrayList<Record> lp = populateRecordList(LPMASTER, lpTotalRecords, false);
 		ArrayList<Record> corp = populateRecordList(CORPMASTER, corpTotalRecords, false);
 
-		System.out.println("Buffers filled. Time elapsed so far is " + ((System.currentTimeMillis() - start)/1000)
+		System.out.println("ArrayLists filled. Time elapsed so far is " + ((System.currentTimeMillis() - start)/1000)
 				+	" seconds; beginning matching algorithm.");
 
 		try {
@@ -203,9 +204,6 @@ public class Compare {
 
 			Comparator<Record> ALPHABETICAL_ORDER = new Comparator<Record>() {
 				public int compare(Record r1, Record r2) {
-					// was originalRec
-					//this should be right
-
 					int res = String.CASE_INSENSITIVE_ORDER.compare(r1.trimmedRecord, r2.trimmedRecord);
 					if (res == 0) {
 						res = r1.compareTo(r2);
@@ -219,7 +217,7 @@ public class Compare {
 			read.close();
 
 		} catch (Exception e) {
-			System.out.println("fillBuff failed for line: " + strbf + " on file " + path);
+			System.out.println("createRecordListForDirectMatches() failed for line: " + strbf + " on file " + path);
 			e.printStackTrace();
 		}
 
@@ -228,6 +226,7 @@ public class Compare {
 
 	// Read from Matches.txt, build Direct_Matches.txt
 	// Note: Very resource heavy, may throw GC overhead exceptions on machines with <8GB RAM
+	// If GC exceptions are thrown, try increasing heap alloc to 2/4/6/8 GB (-Xmx nG)
 	public static void getDirectMatches(boolean db_flag) { 
 
 		BufferedReader readFromMatches;
@@ -258,7 +257,6 @@ public class Compare {
 
 		try {
 
-			// was possible_matches.txt
 			readFromMatches = new BufferedReader(new FileReader(compDir + "Matches.txt"));
 
 			write = new FileWriter(compDir + "Direct_Matches.txt");
@@ -446,7 +444,6 @@ public class Compare {
 			s = s.replaceAll("/", "");
 			s = s.replaceAll(",", "");
 			s = s.replaceAll(";", "");
-			//	s = s.replaceAll(".", "");
 			ret.add(s);
 		}
 		return ret;
@@ -464,7 +461,7 @@ public class Compare {
 		end = begin;
 
 		try {
-			// Walk until second delimeter, return the substring between begin, end 
+			// Walk until second delimiter, return the substring between begin, end 
 			while (cb[++end] != '|');
 
 			// For malformed Strings (i.e. Active|JIN ANAHEIM PA), just cut it off at str.len()
@@ -541,62 +538,14 @@ public class Compare {
 		return line.substring(begin, line.length()-2);
 	}
 
-	public ArrayList<Record> GHfillBuff(String path, int buffsize) {
-
-		ArrayList<Record> ret = new ArrayList<Record>(buffsize);
-		ArrayList<String> trimmedTokens = new ArrayList<String>(5);
-
-		String[] tmp;
-
-		BufferedReader br;
-		String strbf = "";
-		String originalName = "";
-		String trimmedName = "";
-
-		try {
-
-			br = new BufferedReader(new FileReader(path));
-
-			while ((strbf = br.readLine()) != null) {
-
-				originalName = getName(strbf);
-
-				trimmedName = originalName.replaceAll("/", " ");
-				trimmedName = trimmedName.replaceAll(",", " ");
-				// Split into tokens
-				tmp = trimmedName.split("\\s");
-
-				trimmedTokens = removeCommonWords(tmp);
-				trimmedTokens = removeInternalNonAlpha(trimmedTokens);
-				trimmedTokens = removeDuplicates(trimmedTokens);
-				trimmedTokens = removeSmallEntries(trimmedTokens);
-
-				// Sort tokens by String length, so that longest Strings are first
-				// Increases probability of finding a "good" match
-				StringLengthComparator strcomp = new StringLengthComparator();
-				Collections.sort(trimmedTokens, strcomp);
-
-				ret.add(new Record(originalName, concat(trimmedTokens.toString())));
-			}
-
-		} catch (Exception e) {
-			System.out.println();
-			e.printStackTrace();
-		}
-
-
-		return ret;
-	}
-
-
 	public static void main(String[] args) {
 
 		long start = System.currentTimeMillis();
 		long min, sec;
 
-		//getMatches();
+		getMatches();
 
-		getDirectMatches(false);
+		//getDirectMatches(false);
 
 		min = ((System.currentTimeMillis()-start) / 1000) / 60;
 		sec = ((System.currentTimeMillis()-start) / 1000) % 60;
